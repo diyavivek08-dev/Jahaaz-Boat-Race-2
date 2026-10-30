@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JAHAAZ - Challenge</title>
+  <style>
+    :root {
+      --bg-dark: #030f1e;
+      --card-bg: rgba(7, 26, 49, 0.88);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --text-light: #e0f7fa;
+      --correct-green: #00e676;
+      --wrong-red: #ff5252;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at center, #072142 0%, #030f1e 100%);
+      color: var(--text-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, rgba(0, 242, 254, 0.05) 0%, transparent 80%);
+      pointer-events: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 650px;
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.15);
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+      border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+      padding-bottom: 15px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      letter-spacing: 4px;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+      margin-bottom: 5px;
+    }
+    .checkpoint-tag {
+      font-size: 1rem;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+    .timer-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(0, 242, 254, 0.15);
+    }
+    .timer-label { font-size: 0.9rem; opacity: 0.85; letter-spacing: 1px; }
+    .timer-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent-cyan);
+      font-family: monospace;
+    }
+    .question-box {
+      margin-bottom: 25px;
+    }
+    .question-text {
+      font-size: 1.15rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      color: var(--text-light);
+      padding: 14px 18px;
+      border-radius: 8px;
+      text-align: left;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .option-btn:hover {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--accent-cyan);
+    }
+    .input-box {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      outline: none;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      border: none;
+      border-radius: 8px;
+      color: #030f1e;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+    .status-msg {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .status-msg.correct {
+      background: rgba(0, 230, 118, 0.15);
+      border: 1px solid var(--correct-green);
+      color: var(--correct-green);
+    }
+    .status-msg.wrong {
+      background: rgba(255, 82, 82, 0.15);
+      border: 1px solid var(--wrong-red);
+      color: var(--wrong-red);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>JAHAAZ</h1>
+      <div class="checkpoint-tag">Challenge</div>
+    </header>
+    <div class="timer-box">
+      <span class="timer-label">TIME ELAPSED</span>
+      <span id="timer" class="timer-value">00:00</span>
+    </div>
+    <div id="questionContainer" class="question-box"></div>
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+  <script>
+    const QUESTION_BANK = {
+      logicCoding: [
+        { type: 'mcq', question: "A mermaid says, 'I have no siblings, and the mother of the person in this photograph is my mother's daughter.' Who is in the photograph?", options: ["A) Her mother", "B) Her daughter", "C) Her grandmother", "D) Her aunt"], answer: "B" },
+        { type: 'mcq', question: "A crab arranges shells in this sequence: 1, 4, 9, 16, 25, __. What comes next?", options: ["A) 30", "B) 35", "C) 36", "D) 49"], answer: "C" },
+        { type: 'mcq', question: "A pufferfish thinks of a number. It doubles the number and adds 6 to get 20. What was the original number?", options: ["A) 5", "B) 7", "C) 8", "D) 13"], answer: "B" },
+        { type: 'mcq', question: "A shark discovers this sequence carved into a sunken ship: 2, 6, 12, 20, 30, __. What number comes next?", options: ["A) 36", "B) 40", "C) 42", "D) 48"], answer: "C" },
+        { type: 'mcq', question: "Which built-in function in Python do you use to print 'Hello Elf!' to the console?", options: ["A) echo()", "B) print()", "C) display()", "D) cout <<"], answer: "B" },
+        { type: 'mcq', question: "What is the mandatory function name required for a C++ program to start executing?", options: ["A) start()", "B) begin()", "C) main()", "D) execute()"], answer: "C" },
+        { type: 'mcq', question: "A dragon wants to add a new gold coin to its Python list named hoard. Which method should it call?", options: ["A) hoard.push(coin)", "B) hoard.append(coin)", "C) hoard.add(coin)", "D) hoard.insert_end(coin)"], answer: "B" },
+        { type: 'num', question: "Using A = 1, B = 2, C = 3, and so on, what is the total numerical value of SEA?", answer: "25" },
+        { type: 'num', question: "Nine identical-looking pearls are on a table. One is heavier than the others. What is the minimum number of weighings needed on a balance scale to guarantee finding the heavier pearl?", answer: "2" }
+      ]
+    };
+
+    const ALLOWED_SUBJECTS = ['logicCoding'];
+    let currentQuestion = null;
+    let timerSeconds = 0;
+    let timerInterval = null;
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerSeconds = 0;
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const secs = String(timerSeconds % 60).padStart(2, '0');
+      document.getElementById('timer').innerText = mins + ":" + secs;
+    }
+
+    function loadRandomQuestion() {
+      const chosenSubject = ALLOWED_SUBJECTS[Math.floor(Math.random() * ALLOWED_SUBJECTS.length)];
+      let usedIndices = JSON.parse(localStorage.getItem('jahaaz_used_' + chosenSubject)) || [];
+      const totalQuestions = QUESTION_BANK[chosenSubject].length;
+      if (usedIndices.length >= totalQuestions) {
+        usedIndices = [];
+      }
+      let availableIndices = [];
+      for (let i = 0; i < totalQuestions; i++) {
+        if (!usedIndices.includes(i)) availableIndices.push(i);
+      }
+      const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      usedIndices.push(randomIndex);
+      localStorage.setItem('jahaaz_used_' + chosenSubject, JSON.stringify(usedIndices));
+      currentQuestion = QUESTION_BANK[chosenSubject][randomIndex];
+      renderQuestion(currentQuestion);
+    }
+
+    function renderQuestion(q) {
+      const container = document.getElementById('questionContainer');
+      document.getElementById('statusMsg').style.display = 'none';
+      let html = '<div class="question-text">' + q.question + '</div>';
+      if (q.type === 'mcq') {
+        html += '<div class="options-grid">';
+        q.options.forEach((opt) => {
+          const optVal = opt.trim().charAt(0);
+          html += '<button class="option-btn" onclick="checkAnswer(\'' + optVal + '\')">' + opt + '</button>';
+        });
+        html += '</div>';
+      } else if (q.type === 'num') {
+        html += '<input type="number" id="numInput" class="input-box" placeholder="Type numerical answer..." />' +
+                '<button class="submit-btn" onclick="submitNumerical()">Submit Answer</button>';
+      }
+      container.innerHTML = html;
+    }
+
+    function checkAnswer(userAns) {
+      const statusMsg = document.getElementById('statusMsg');
+      if (userAns.trim().toUpperCase() === currentQuestion.answer.trim().toUpperCase()) {
+        clearInterval(timerInterval);
+        statusMsg.className = "status-msg correct";
+        statusMsg.innerText = "Congratulations! RACE AHEAD";
+        statusMsg.style.display = 'block';
+      } else {
+        timerSeconds += 5;
+        updateTimerDisplay();
+        statusMsg.className = "status-msg wrong";
+        statusMsg.innerText = "Wrong Answer! Try another one";
+        statusMsg.style.display = 'block';
+        setTimeout(() => {
+          loadRandomQuestion();
+        }, 1500);
+      }
+    }
+
+    function submitNumerical() {
+      const val = document.getElementById('numInput').value;
+      if (val !== "") {
+        checkAnswer(val);
+      }
+    }
+
+    window.onload = () => {
+      startTimer();
+      loadRandomQuestion();
+    };
+  </script>
+</body>
+</html>
